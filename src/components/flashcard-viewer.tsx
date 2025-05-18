@@ -9,6 +9,7 @@ import { shuffleArray, cn } from '@/lib/utils';
 import { RotateCcw, CheckCircle, XCircle, Brain, ListRestart, Lightbulb } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
+import { useConfetti } from "@/hooks/use-confetti";
 import {
   Select,
   SelectContent,
@@ -90,6 +91,14 @@ export function FlashcardViewer() {
   const [selectedNumberOfQuestions, setSelectedNumberOfQuestions] = useState<number>(10);
   const [selectedDifficulty, setSelectedDifficulty] = useState<(typeof difficultyLevels)[number]>("All Levels");
   const [showHintText, setShowHintText] = useState(false);
+  // Track whether a session was just completed to show confetti
+  const [showSessionCompleteConfetti, setShowSessionCompleteConfetti] = useState(false);
+
+  // Add confetti hook - only show when session is complete
+  const { Confetti, burstConfetti } = useConfetti({
+    recycle: false,
+    numberOfPieces: 300,
+  });
 
 
   const { toast } = useToast();
@@ -176,10 +185,11 @@ export function FlashcardViewer() {
     setSessionActive(true);
     setFirstEncounterKnownIds(new Set());
     setFirstEncounterDontKnowIds(new Set());
-    setAllEncounteredIds(new Set());
-    setKnowAnimationTrigger('idle');
+    setAllEncounteredIds(new Set());    setKnowAnimationTrigger('idle');
     setTimeElapsed(0);
     setShowHintText(false);
+    // Reset confetti flag when starting a new session
+    setShowSessionCompleteConfetti(false);
   }, [activeFlashcards, toast, selectedCategory, selectedNumberOfQuestions, selectedDifficulty]);
 
   useEffect(() => {
@@ -229,12 +239,14 @@ export function FlashcardViewer() {
       if (!allEncounteredIds.has(currentCard.id)) {
         setFirstEncounterKnownIds(prev => new Set(prev).add(currentCard.id));
         setAllEncounteredIds(prev => new Set(prev).add(currentCard.id));
-      }
-      
-      const newDeck = deck.slice(1);
+      }      const newDeck = deck.slice(1);
       setDeck(newDeck);
       if (newDeck.length === 0) {
-        setSessionActive(false); 
+        setSessionActive(false);
+        // Flag that we've completed a session and should show confetti
+        setShowSessionCompleteConfetti(true);
+        // Celebrate completion with confetti!
+        burstConfetti(5000);
       }
       setIsFlipped(false);
       setKnowAnimationTrigger('idle');
@@ -243,14 +255,22 @@ export function FlashcardViewer() {
 
   const handleDontKnow = () => {
     if (!currentCard || knowAnimationTrigger === 'know') return;
-    setShowHintText(false);
-    if (!allEncounteredIds.has(currentCard.id)) {
+    setShowHintText(false);    if (!allEncounteredIds.has(currentCard.id)) {
       setFirstEncounterDontKnowIds(prev => new Set(prev).add(currentCard.id));
       setAllEncounteredIds(prev => new Set(prev).add(currentCard.id));
     }
-    
-    const newDeck = [...deck.slice(1), currentCard]; 
-    setDeck(newDeck);
+      // If this is the last card in the initial deck and we're going to see it again
+    if (deck.length === 1) {
+      setSessionActive(false);
+      // Flag that we've completed a session and should show confetti
+      setShowSessionCompleteConfetti(true);
+      // Celebrate completion with confetti!
+      burstConfetti(5000);
+      setDeck([]);
+    } else {
+      const newDeck = [...deck.slice(1), currentCard];
+      setDeck(newDeck);
+    }
     setIsFlipped(false);
   };
 
@@ -279,9 +299,10 @@ export function FlashcardViewer() {
     const seconds = totalSeconds % 60;
     return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
   };
-
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-background text-foreground transition-colors duration-300">
+      {/* Render confetti when active */}      {/* Only render confetti component on session completion */}
+      {showSessionCompleteConfetti && <Confetti />}
       <div className="absolute top-4 right-4 flex items-center space-x-2">
         <Button variant="ghost" size="icon" onClick={handleResetToDefault} aria-label="Reset flashcards to default">
           <ListRestart className="h-5 w-5" />
@@ -455,10 +476,12 @@ export function FlashcardViewer() {
                   </Select>
                 </div>
               </div>
-            )}
-
-            <Button 
-              onClick={initializeSession} 
+            )}            <Button              onClick={() => {
+                // Reset the confetti flag when starting a new session
+                setShowSessionCompleteConfetti(false);
+                // Start the session 
+                initializeSession();
+              }}
               className="py-3 text-lg px-6 btn-3d-effect btn-3d-primary text-standard-3d"
               disabled={activeFlashcards.length === 0}
             >
@@ -473,11 +496,9 @@ export function FlashcardViewer() {
               </p>
             )}
           </div>
-        )}
-      </main>
+        )}      </main>
     </div>
   );
 }
 
 
-    
