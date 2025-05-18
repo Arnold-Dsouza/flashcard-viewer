@@ -49,14 +49,6 @@ A modern flashcard application built with Next.js to help students learn and mem
 
 4. Open [http://localhost:9002](http://localhost:9002) with your browser to see the result.
 
-## Deployment
-
-This project is configured for easy deployment to Vercel:
-
-1. Push your code to GitHub
-2. Connect your GitHub repository to Vercel
-3. Vercel will automatically deploy your application
-
 ## Project Structure
 
 ```
