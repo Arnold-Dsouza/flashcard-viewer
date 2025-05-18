@@ -332,13 +332,13 @@ export function FlashcardViewer() {
               <Button 
                 onClick={handleDontKnow} 
                 disabled={knowAnimationTrigger === 'know'}
-                className="flex-1 bg-accent hover:bg-accent/90 text-accent-foreground py-3 text-lg btn-3d-effect btn-3d-accent text-standard-3d"
+                className="w-1/2 bg-accent hover:bg-accent/90 text-accent-foreground py-3 text-lg btn-3d-effect btn-3d-accent text-standard-3d"
                 aria-label="Mark card as 'Don't Know'"
               >
                 <XCircle className="mr-2 h-5 w-5" />
                 Don't Know
               </Button>
-              <div className="relative flex-1"> 
+              <div className="relative w-1/2"> 
                 <Button 
                   onClick={handleKnow} 
                   disabled={knowAnimationTrigger === 'know'}
