@@ -1,26 +1,233 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: 0 0% 98%; /* Almost White */
+    --background-end: 220 30% 96%; /* Very Light Cool Gray */
+    --foreground: 220 10% 15%; /* Very Dark Blue/Gray */
+
+    --card: 0 0% 100%; /* White */
+    --card-foreground: 220 10% 15%; /* Very Dark Blue/Gray */
+    --card-realism-stop1: 0 0% 100%; 
+    --card-realism-stop2: 0 0% 97%; 
+
+    --popover: 0 0% 100%; /* White */
+    --popover-foreground: 220 10% 15%; /* Very Dark Blue/Gray */
+
+    --primary: 210 100% 56%; /* Vibrant Blue (Revolut-like) */
+    --primary-foreground: 0 0% 100%; /* White */
+    --primary-shadow-color: 210 100% 30%; /* Darker Vibrant Blue */
+
+    --secondary: 220 20% 92%; /* Light Gray */
+    --secondary-foreground: 220 10% 25%; /* Dark Gray */
+
+    --muted: 220 20% 92%; /* Light Gray */
+    --muted-foreground: 220 10% 45%; /* Medium Gray */
+
+    --accent: 300 80% 60%; /* Vibrant Magenta (Revolut-like) */
+    --accent-foreground: 0 0% 100%; /* White */
+    --accent-shadow-color: 300 80% 35%; /* Darker Vibrant Magenta */
+
+    --destructive: 0 84.2% 60.2%; /* Standard Red */
+    --destructive-foreground: 0 0% 98%; /* Near White */
+
+    --success: 130 65% 55%; /* Light Green */
+    --success-foreground: 0 0% 10%; /* Dark Gray for contrast */
+    --success-shadow-color: 130 65% 35%; /* Darker Light Green */
+
+    --border: 220 15% 88%; /* Light Gray Border */
+    --input: 220 15% 88%; /* Light Gray Input */
+    --ring: 210 100% 56%; /* Vibrant Blue for focus rings */
+
+    --chart-1: 210 100% 65%; /* Lighter Primary Blue */
+    --chart-2: 240 80% 70%; /* Purple */
+    --chart-3: 300 80% 65%; /* Magenta/Pink - Accent */
+    --chart-4: 200 70% 60%; /* Sky Blue */
+    --chart-5: 270 75% 68%; /* Violet */
+    --radius: 0.5rem;
+
+    --sidebar-background: 0 0% 97%;
+    --sidebar-foreground: 220 10% 15%;
+    --sidebar-primary: 210 100% 56%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 20% 90%;
+    --sidebar-accent-foreground: 220 10% 10%;
+    --sidebar-border: 220 15% 85%;
+    --sidebar-ring: 210 100% 56%;
+  }
+
+  .dark {
+    --background: 220 15% 10%; /* Very Dark Desaturated Blue */
+    --background-end: 240 15% 8%; /* Very Dark Desaturated Purple-Blue */
+    --foreground: 220 10% 85%; /* Light Grayish Blue */
+
+    --card: 220 15% 15%; /* Dark Grayish Blue, slightly lighter than bg */
+    --card-foreground: 220 10% 85%; /* Light Grayish Blue */
+    --card-realism-stop1: 220 15% 18%;
+    --card-realism-stop2: 220 15% 15%;
+
+    --popover: 220 15% 12%; /* Similar to card */
+    --popover-foreground: 220 10% 85%; /* Light Grayish Blue */
+
+    --primary: 210 100% 56%; /* Vibrant Blue (Revolut-like) */
+    --primary-foreground: 0 0% 100%; /* White */
+    --primary-shadow-color: 210 100% 30%; /* Darker Vibrant Blue */
+
+    --secondary: 220 10% 25%; /* Medium Dark Gray */
+    --secondary-foreground: 220 10% 80%; /* Lighter Gray */
+
+    --muted: 220 10% 25%; /* Medium Dark Gray */
+    --muted-foreground: 220 10% 60%; /* Medium Gray */
+
+    --accent: 300 80% 60%; /* Vibrant Magenta (Revolut-like) */
+    --accent-foreground: 0 0% 100%; /* White */
+    --accent-shadow-color: 300 80% 35%; /* Darker Vibrant Magenta */
+
+    --destructive: 0 70% 50%; /* Slightly less intense red for dark mode */
+    --destructive-foreground: 0 0% 98%; /* Near White */
+    
+    --success: 130 60% 50%; /* Light Green (slightly adjusted for dark mode if needed) */
+    --success-foreground: 0 0% 95%; /* Light Gray/White for contrast */
+    --success-shadow-color: 130 60% 30%; /* Darker Light Green */
+
+    --border: 220 15% 20%; /* Dark Gray Border */
+    --input: 220 15% 20%; /* Dark Gray Input */
+    --ring: 210 100% 60%; /* Brighter Blue for focus rings in dark mode */
+    
+    --chart-1: 210 100% 70%;
+    --chart-2: 240 80% 75%;
+    --chart-3: 300 80% 70%;
+    --chart-4: 200 70% 65%;
+    --chart-5: 270 75% 72%;
+
+    --sidebar-background: 220 15% 12%;
+    --sidebar-foreground: 220 10% 85%;
+    --sidebar-primary: 210 100% 56%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 15% 20%;
+    --sidebar-accent-foreground: 220 10% 90%;
+    --sidebar-border: 220 15% 25%;
+    --sidebar-ring: 210 100% 56%;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply text-foreground;
+    background: linear-gradient(to bottom right, hsl(var(--background)), hsl(var(--background-end)));
+  }
 }
+
+@layer utilities {
+  .text-progress-3d {
+    color: hsl(var(--primary));
+    font-weight: 600; /* semibold */
+  }
+
+  .text-standard-3d {
+    /* Default for light mode */
+    text-shadow: 0.5px 0.5px 1px rgba(0, 0, 0, 0.2);
+  }
+
+  .dark .text-standard-3d {
+    /* For dark mode, slightly stronger/darker shadow on light text for depth */
+    text-shadow: 0.5px 0.5px 1.5px rgba(0, 0, 0, 0.35);
+  }
+
+  .btn-3d-effect {
+    position: relative;
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+    will-change: transform, box-shadow;
+  }
+
+  .btn-3d-primary {
+    box-shadow: 0px 5px 0px 0px hsl(var(--primary-shadow-color));
+  }
+  .btn-3d-primary:active {
+    transform: translateY(3px);
+    box-shadow: 0px 2px 0px 0px hsl(var(--primary-shadow-color));
+  }
+
+  .btn-3d-accent {
+    box-shadow: 0px 5px 0px 0px hsl(var(--accent-shadow-color));
+  }
+  .btn-3d-accent:active {
+    transform: translateY(3px);
+    box-shadow: 0px 2px 0px 0px hsl(var(--accent-shadow-color));
+  }
+
+  .btn-3d-success {
+    box-shadow: 0px 5px 0px 0px hsl(var(--success-shadow-color));
+  }
+  .btn-3d-success:active {
+    transform: translateY(3px);
+    box-shadow: 0px 2px 0px 0px hsl(var(--success-shadow-color));
+  }
+  
+  .outer-splash-element {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    background-color: transparent;
+    border: 3px solid hsl(var(--primary)); /* Use primary color or a specific splash color */
+    border-radius: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 1;
+    pointer-events: none; /* Important so it doesn't interfere with button clicks */
+  }
+
+  @keyframes outer-splash-animation {
+    0% {
+      transform: translate(-50%, -50%) scale(0.5);
+      opacity: 1;
+    }
+    100% {
+      transform: translate(-50%, -50%) scale(2.5); /* Adjust scale for desired splash size */
+      opacity: 0;
+    }
+  }
+
+  .animate-outer-splash {
+    animation: outer-splash-animation 0.5s ease-out forwards;
+  }
+
+
+  @keyframes card-burn-out {
+    0% {
+      opacity: 1;
+      transform: scale(1) rotate(0deg);
+      filter: grayscale(0) brightness(1) contrast(1) sepia(0) blur(0px);
+    }
+    50% {
+      opacity: 0.8;
+      transform: scale(1.05) rotate(2deg);
+      filter: grayscale(0.5) brightness(1.5) contrast(1.2) sepia(0.3) blur(1px);
+    }
+    100% {
+      opacity: 0;
+      transform: scale(0.8) rotate(-5deg);
+      filter: grayscale(1) brightness(0.5) contrast(2) sepia(0.8) blur(3px);
+    }
+  }
+
+  .animate-card-burn-out {
+    animation: card-burn-out 0.7s forwards ease-in-out;
+  }
+
+  @keyframes icon-pulse-strong {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.3); }
+  }
+  .animate-pulse-strong {
+    animation: icon-pulse-strong 0.3s ease-in-out;
+  }
+}
+
+    
