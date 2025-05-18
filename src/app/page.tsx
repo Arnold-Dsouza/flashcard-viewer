@@ -1,103 +1,291 @@
-import Image from "next/image";
 
-export default function Home() {
+"use client"; 
+
+import { Button } from '@/components/ui/button';
+import { Brain, UploadCloud, Sparkles } from 'lucide-react';
+import Link from 'next/link';
+import { useState, useEffect, useRef } from 'react';
+import { useToast } from "@/hooks/use-toast";
+import type { Flashcard, AIGenerateRequest } from '@/types';
+import { DarkModeToggle } from '@/components/dark-mode-toggle';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+const difficultyLevelsForAI = ["Easy", "Medium", "Hard"] as const;
+
+export default function StartPage() {
+  const [currentYear, setCurrentYear] = useState<number | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  const [aiTopic, setAiTopic] = useState("");
+  const [aiDifficulty, setAiDifficulty] = useState<(typeof difficultyLevelsForAI)[number]>("Medium");
+  const [isAiDialogOpen, setIsAiDialogOpen] = useState(false);
+
+  useEffect(() => {
+    setCurrentYear(new Date().getFullYear());
+    const storedDarkMode = localStorage.getItem('flashlearn-darkmode');
+    if (storedDarkMode) {
+      const newMode = storedDarkMode === 'true';
+      setIsDarkMode(newMode);
+      document.documentElement.classList.toggle('dark', newMode);
+    }
+  }, []);
+
+  const toggleDarkModeHandler = () => {
+    setIsDarkMode(prev => {
+      const newMode = !prev;
+      document.documentElement.classList.toggle('dark', newMode);
+      localStorage.setItem('flashlearn-darkmode', String(newMode));
+      return newMode;
+    });
+  };
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileSelected = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (file.type !== 'text/csv') {
+      toast({
+        title: "Invalid File Type",
+        description: "Please upload a .csv file.",
+        variant: "destructive",
+      });
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target?.result as string;
+      if (!text) {
+        toast({ title: "Error Reading File", description: "Could not read the file content.", variant: "destructive" });
+        return;
+      }
+      try {
+        const lines = text.split(/\r\n|\n/).filter(line => line.trim() !== '');
+        const importedCards: Flashcard[] = lines.map((line, index) => {
+          const parts = line.split(',');
+          if (parts.length < 2) {
+            throw new Error(`Line ${index + 1} does not have enough columns (question,answer). Found: "${line}"`);
+          }
+          const question = parts[0].trim().replace(/^"|"$/g, '');
+          const answer = parts.slice(1).join(',').trim().replace(/^"|"$/g, '');
+
+          if (!question || !answer) {
+            throw new Error(`Line ${index + 1} has empty question or answer. Question: "${question}", Answer: "${answer}"`);
+          }
+          return {
+            id: `imported-${Date.now()}-${index}`,
+            question: question,
+            answer: answer,
+          };
+        });
+
+        if (importedCards.length === 0) {
+          toast({
+            title: "Empty CSV",
+            description: "The CSV file is empty or contains no valid flashcard data.",
+            variant: "destructive",
+          });
+        } else {
+          localStorage.setItem('flashlearn-custom-cards', JSON.stringify(importedCards));
+          toast({
+            title: "Import Successful",
+            description: `${importedCards.length} flashcards imported and saved. Click 'Start Learning' to use them.`,
+          });
+        }
+      } catch (error: any) {
+        toast({
+          title: "Import Error",
+          description: error.message || "Failed to parse CSV file. Ensure format is: question,answer",
+          variant: "destructive",
+        });
+      } finally {
+        if (fileInputRef.current) fileInputRef.current.value = "";
+      }
+    };
+    reader.onerror = () => {
+        toast({ title: "File Read Error", description: "An error occurred while reading the file.", variant: "destructive" });
+        if (fileInputRef.current) fileInputRef.current.value = ""; 
+    };
+    reader.readAsText(file);
+  };
+  const handleAiGenerate = async () => {
+    if (!aiTopic.trim()) {
+      toast({
+        title: "Input Required",
+        description: "Please enter a topic or text to generate flashcards from.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      toast({
+        title: "AI Generation Started",
+        description: "Generating flashcards from your topic...",
+      });
+        // Import the AI mock service
+      const { ai } = await import('@/ai/mock-ai-service');
+      
+      // Generate flashcards with our mock AI service
+      const generatedCards = await ai.generateFlashcards(aiTopic, aiDifficulty, 5);
+      
+      // Get any existing cards
+      const existingCards = JSON.parse(localStorage.getItem('flashlearn-custom-cards') || '[]');
+      
+      // Combine and save all cards
+      const allCards = [...existingCards, ...generatedCards];
+      localStorage.setItem('flashlearn-custom-cards', JSON.stringify(allCards));
+      
+      toast({
+        title: "Flashcards Generated",
+        description: `${generatedCards.length} flashcards created for topic: "${aiTopic}". Click 'Start Learning' to use them.`,
+      });
+      
+      // Reset fields and close dialog
+      setAiTopic("");
+      setAiDifficulty("Medium");
+      setIsAiDialogOpen(false);
+    } catch (error) {
+      console.error("Error generating flashcards:", error);
+      toast({
+        title: "Generation Failed",
+        description: "There was an error generating flashcards. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className="flex-grow flex flex-col items-center justify-center p-4 bg-background text-foreground transition-colors duration-300 min-h-screen relative">
+      <div className="absolute top-4 right-4">
+        <DarkModeToggle isDarkMode={isDarkMode} onToggle={toggleDarkModeHandler} />
+      </div>
+      <input type="file" ref={fileInputRef} onChange={handleFileSelected} accept=".csv" className="hidden" />
+      
+      <header className="mb-8 text-center">
+        <h1 className="text-5xl sm:text-6xl font-bold text-primary text-standard-3d flex items-center justify-center">
+          <Brain className="mr-3 sm:mr-4 h-12 w-12 sm:h-16 sm:w-16" /> FlashLearn
+        </h1>
+        <p className="mt-4 text-lg sm:text-xl text-muted-foreground text-standard-3d">
+          Master new concepts, one card at a time.
+        </p>
+      </header>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+      <main className="mb-16 flex flex-col space-y-4 w-full max-w-xs sm:max-w-sm">
+        <Link href="/learn" passHref>
+          <Button 
+            size="lg" 
+            className="w-full py-3 sm:py-4 text-lg sm:text-xl btn-3d-effect btn-3d-primary text-standard-3d"
+            aria-label="Start learning with flashcards"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
+            Start Learning
+          </Button>
+        </Link>
+
+        <Dialog open={isAiDialogOpen} onOpenChange={setIsAiDialogOpen}>
+          <DialogTrigger asChild>
+            <Button 
+              size="lg"
+              className="w-full py-3 sm:py-4 text-lg sm:text-xl btn-3d-effect btn-3d-primary text-standard-3d" 
+              aria-label="Generate flashcards with AI"
+            >
+              <Sparkles className="mr-2 sm:mr-3 h-5 w-5 sm:h-6 sm:w-6" /> Generate with AI
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Generate Flashcards with AI</DialogTitle>
+              <DialogDescription>
+                Enter a topic or paste some text, choose a difficulty, and let AI create flashcards for you.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-4 md:grid-cols-4 md:items-center">
+                <Label htmlFor="ai-topic" className="md:text-right md:col-span-1">
+                  Topic/Text
+                </Label>
+                <Textarea
+                  id="ai-topic"
+                  value={aiTopic}
+                  onChange={(e) => setAiTopic(e.target.value)}
+                  placeholder="e.g., 'Photosynthesis' or paste a paragraph here..."
+                  className="md:col-span-3 h-24"
+                />
+              </div>
+              <div className="grid gap-4 md:grid-cols-4 md:items-center">
+                <Label htmlFor="ai-difficulty" className="md:text-right md:col-span-1">
+                  Difficulty
+                </Label>
+                <Select 
+                  value={aiDifficulty}
+                  onValueChange={(value) => setAiDifficulty(value as (typeof difficultyLevelsForAI)[number])}
+                >
+                  <SelectTrigger id="ai-difficulty" className="md:col-span-3">
+                    <SelectValue placeholder="Select difficulty" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {difficultyLevelsForAI.map(level => (
+                      <SelectItem key={level} value={level}>
+                        {level}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button type="button" variant="outline">
+                  Cancel
+                </Button>
+              </DialogClose>
+              <Button type="button" onClick={handleAiGenerate} className="btn-3d-effect btn-3d-primary">
+                Generate
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Button 
+          size="lg"
+          onClick={handleUploadClick}
+          className="w-full py-3 sm:py-4 text-lg sm:text-xl btn-3d-effect btn-3d-primary text-standard-3d" 
+          aria-label="Upload custom flashcards from a CSV file"
+        >
+          <UploadCloud className="mr-2 sm:mr-3 h-5 w-5 sm:h-6 sm:w-6" /> Upload Custom Cards
+        </Button>
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+      {currentYear !== null && (
+        <footer className="absolute bottom-4 text-xs sm:text-sm text-muted-foreground text-standard-3d">
+          <p>© {currentYear} FlashLearn. Your journey to knowledge begins here.</p>
+        </footer>
+      )}
     </div>
   );
 }
