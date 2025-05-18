@@ -1,4 +1,3 @@
-
 "use client"; 
 
 import { Button } from '@/components/ui/button';
@@ -29,6 +28,7 @@ import {
 } from "@/components/ui/select";
 
 const difficultyLevelsForAI = ["Easy", "Medium", "Hard"] as const;
+const questionNumberOptions = [5, 10, 15, 20] as const;
 
 export default function StartPage() {
   const [currentYear, setCurrentYear] = useState<number | null>(null);
@@ -38,6 +38,7 @@ export default function StartPage() {
 
   const [aiTopic, setAiTopic] = useState("");
   const [aiDifficulty, setAiDifficulty] = useState<(typeof difficultyLevelsForAI)[number]>("Medium");
+  const [aiQuestionCount, setAiQuestionCount] = useState<(typeof questionNumberOptions)[number]>(5);
   const [isAiDialogOpen, setIsAiDialogOpen] = useState(false);
 
   useEffect(() => {
@@ -152,7 +153,7 @@ export default function StartPage() {
       const { ai } = await import('@/ai/mock-ai-service');
       
       // Generate flashcards with our mock AI service
-      const generatedCards = await ai.generateFlashcards(aiTopic, aiDifficulty, 5);
+      const generatedCards = await ai.generateFlashcards(aiTopic, aiDifficulty, aiQuestionCount);
       
       // Get any existing cards
       const existingCards = JSON.parse(localStorage.getItem('flashlearn-custom-cards') || '[]');
@@ -169,6 +170,7 @@ export default function StartPage() {
       // Reset fields and close dialog
       setAiTopic("");
       setAiDifficulty("Medium");
+      setAiQuestionCount(5);
       setIsAiDialogOpen(false);
     } catch (error) {
       console.error("Error generating flashcards:", error);
@@ -237,25 +239,47 @@ export default function StartPage() {
                   className="md:col-span-3 h-24"
                 />
               </div>
-              <div className="grid gap-4 md:grid-cols-4 md:items-center">
-                <Label htmlFor="ai-difficulty" className="md:text-right md:col-span-1">
-                  Difficulty
-                </Label>
-                <Select 
-                  value={aiDifficulty}
-                  onValueChange={(value) => setAiDifficulty(value as (typeof difficultyLevelsForAI)[number])}
-                >
-                  <SelectTrigger id="ai-difficulty" className="md:col-span-3">
-                    <SelectValue placeholder="Select difficulty" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {difficultyLevelsForAI.map(level => (
-                      <SelectItem key={level} value={level}>
-                        {level}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="grid gap-4 md:grid-cols-8 md:items-center">
+                <div className="grid gap-4 md:grid-cols-4 md:items-center md:col-span-4">
+                  <Label htmlFor="ai-difficulty" className="md:text-right md:col-span-1">
+                    Difficulty
+                  </Label>
+                  <Select 
+                    value={aiDifficulty}
+                    onValueChange={(value) => setAiDifficulty(value as (typeof difficultyLevelsForAI)[number])}
+                  >
+                    <SelectTrigger id="ai-difficulty" className="md:col-span-3">
+                      <SelectValue placeholder="Select difficulty" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {difficultyLevelsForAI.map(level => (
+                        <SelectItem key={level} value={level}>
+                          {level}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-4 md:grid-cols-4 md:items-center md:col-span-4">
+                  <Label htmlFor="ai-question-count" className="md:text-right md:col-span-1">
+                    Questions
+                  </Label>
+                  <Select 
+                    value={aiQuestionCount.toString()}
+                    onValueChange={(value) => setAiQuestionCount(parseInt(value) as (typeof questionNumberOptions)[number])}
+                  >
+                    <SelectTrigger id="ai-question-count" className="md:col-span-3">
+                      <SelectValue placeholder="Select number" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {questionNumberOptions.map(count => (
+                        <SelectItem key={count} value={count.toString()}>
+                          {count}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
             <DialogFooter>

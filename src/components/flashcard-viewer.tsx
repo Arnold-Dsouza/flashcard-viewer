@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -329,7 +328,7 @@ export function FlashcardViewer() {
               onFlip={handleFlip} 
               animationTrigger={knowAnimationTrigger}
             />
-            <div className="mt-8 flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 w-full max-w-md sm:w-96">
+            <div className="flex flex-row gap-4 w-full max-w-md sm:w-96 mt-4">
               <Button 
                 onClick={handleDontKnow} 
                 disabled={knowAnimationTrigger === 'know'}
