@@ -29,7 +29,7 @@ A modern flashcard application built with Next.js to help students learn and mem
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-username/flashlearn.git
+   git clone https://github.com/Arnold-Dsouza/flashcard-viewer.git
    cd flashlearn
    ```
 
